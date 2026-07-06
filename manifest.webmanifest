@@ -1,0 +1,12 @@
+{
+  "name": "FallBridge",
+  "short_name": "FallBridge",
+  "description": "Web Bluetooth GATT terminal for BLE-mesh dongles.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#1a1a1e",
+  "theme_color": "#1a1a1e",
+  "icons": [
+    { "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%231a1a1e'/%3E%3Ctext x='96' y='128' font-family='serif' font-size='120' fill='%237a9c7e' text-anchor='middle'%3E%E2%89%88%3C/text%3E%3C/svg%3E", "sizes": "192x192", "type": "image/svg+xml" }
+  ]
+}

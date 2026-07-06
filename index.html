@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FallBridge · Web Bluetooth GATT terminal for BLE-mesh dongles</title>
+<meta name="description" content="Pair your browser with an ESP32 or nRF52 BLE-mesh dongle. The browser is the UI. The dongle does the mesh. Chrome / Edge only.">
+<meta name="author" content="AI-Native Solutions">
+<meta name="theme-color" content="#1a1a1e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%231a1a1e'/%3E%3Ctext x='16' y='23' font-family='serif' font-size='20' fill='%237a9c7e' text-anchor='middle'%3E%E2%89%88%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{--void:#1a1a1e;--deep:#212127;--surface:#2a2a30;--raised:#33333a;--line:rgba(232,228,219,0.08);--line2:rgba(232,228,219,0.16);--text:#e8e4db;--muted:#928d80;--dim:#6b6660;--sage:#7a9c7e;--sage-dim:rgba(122,156,126,0.14);--amber:#d4a052;--amber-dim:rgba(212,160,82,0.12);--coral:#d67a5a;--coral-glow:rgba(214,122,90,0.15);--serif:'Cormorant Garamond','Iowan Old Style',Georgia,serif;--sans:'Inter',-apple-system,system-ui,sans-serif;--mono:'JetBrains Mono','IBM Plex Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--void);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+button{font-family:inherit;cursor:pointer;border:none;outline:none}
+input,textarea,select{font-family:inherit;background:transparent;color:var(--text);border:none;outline:none;width:100%}
+h1,h2,h3{font-family:var(--serif);font-weight:400;line-height:1.2}
+h1{font-size:32px;letter-spacing:0.01em;margin-bottom:6px}
+h1 em{color:var(--sage);font-style:italic}
+h2{font-size:20px;color:var(--text);margin-bottom:10px}
+h2 em{color:var(--sage);font-style:italic}
+h3{font-size:11.5px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.16em;font-family:var(--mono);font-weight:500}
+.topbar{background:rgba(26,26,30,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50;flex-wrap:wrap;gap:10px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:22px}
+.brand .glyph{color:var(--sage);font-size:24px}
+.brand .co{color:var(--dim);font-family:var(--mono);font-size:9.5px;letter-spacing:0.16em;margin-left:6px;text-transform:uppercase}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{background:transparent;color:var(--muted);padding:8px 14px;border-radius:8px;font-family:var(--mono);font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;transition:all .15s}
+.tab:hover{color:var(--text)}
+.tab.on{background:var(--sage-dim);color:var(--sage)}
+main{padding:24px;max-width:1080px;margin:0 auto;width:100%}
+.view{display:none}
+.view.on{display:block}
+.hero{margin-bottom:20px}
+.hero p{color:var(--muted);max-width:720px;margin-top:6px;font-size:15.5px}
+.hero .lead em{color:var(--sage);font-style:italic}
+.warn{background:var(--amber-dim);border-left:3px solid var(--amber);padding:10px 14px;border-radius:6px;font-size:13px;color:var(--text);margin-top:12px;font-family:var(--mono);letter-spacing:0.02em}
+.card{background:var(--deep);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:720px){.grid2{grid-template-columns:1fr}}
+.big-btn{background:var(--sage);color:var(--void);padding:14px 26px;border-radius:10px;font-family:var(--mono);font-size:11.5px;letter-spacing:0.14em;text-transform:uppercase;font-weight:700}
+.big-btn:hover{background:#8db091}
+.big-btn:disabled{opacity:0.4;cursor:not-allowed}
+.big-btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line2)}
+.big-btn.coral{background:var(--coral);color:var(--void)}
+.stat{display:grid;grid-template-columns:120px 1fr;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.stat:last-child{border-bottom:none}
+.stat .k{color:var(--muted);font-family:var(--mono);font-size:10.5px;letter-spacing:0.12em;text-transform:uppercase;align-self:center}
+.stat .v{color:var(--text);font-family:var(--mono);font-size:13px;word-break:break-all}
+.pill{display:inline-block;padding:3px 10px;border-radius:12px;font-family:var(--mono);font-size:10px;letter-spacing:0.14em;text-transform:uppercase}
+.pill.on{background:var(--sage-dim);color:var(--sage)}
+.pill.off{background:rgba(214,122,90,0.14);color:var(--coral)}
+.pill.mid{background:var(--amber-dim);color:var(--amber)}
+.compose{display:grid;grid-template-columns:180px 1fr auto;gap:10px;align-items:end}
+@media(max-width:720px){.compose{grid-template-columns:1fr}}
+.field{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.field label{display:block;font-family:var(--mono);font-size:9.5px;color:var(--muted);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:4px}
+.field input,.field textarea,.field select{font-size:14px}
+.field textarea{resize:vertical;min-height:44px}
+.send-btn{background:var(--sage);color:var(--void);padding:12px 22px;border-radius:8px;font-family:var(--mono);font-size:11px;letter-spacing:0.14em;text-transform:uppercase;font-weight:700;align-self:end;height:66px}
+.send-btn:disabled{opacity:0.4;cursor:not-allowed}
+.stream{max-height:440px;overflow-y:auto;padding-right:6px}
+.msg{padding:10px 14px;margin-bottom:8px;border-radius:8px;font-family:var(--mono);font-size:12.5px;line-height:1.5;background:var(--surface);border-left:2px solid var(--line2);word-break:break-word}
+.msg.out{border-left-color:var(--amber);background:var(--amber-dim)}
+.msg.in{border-left-color:var(--sage)}
+.msg.sys{border-left-color:var(--muted);color:var(--muted);font-size:11.5px}
+.msg .meta{color:var(--dim);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;display:flex;gap:14px;flex-wrap:wrap}
+.msg .meta span{color:var(--muted)}
+.peers{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.peer{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.peer .id{font-family:var(--mono);font-size:12px;color:var(--sage);margin-bottom:4px}
+.peer .name{font-size:14px;color:var(--text);margin-bottom:6px}
+.peer .meta{font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:0.06em}
+.term{background:#0e0e12;border:1px solid var(--line);border-radius:8px;padding:14px;font-family:var(--mono);font-size:12px;color:var(--sage);max-height:280px;overflow-y:auto;white-space:pre-wrap;line-height:1.6}
+.hex-input{display:flex;gap:8px;margin-top:12px}
+.hex-input input{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:13px}
+.toggle{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--surface);border-radius:10px;margin-bottom:10px}
+.toggle .sw{width:44px;height:24px;background:var(--dim);border-radius:14px;position:relative;transition:background .2s;flex-shrink:0}
+.toggle .sw::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;background:var(--text);border-radius:50%;transition:left .2s}
+.toggle.on .sw{background:var(--sage)}
+.toggle.on .sw::after{left:22px;background:var(--void)}
+.toggle .lbl{flex:1}
+.toggle .lbl .t{font-size:14px;color:var(--text);margin-bottom:2px}
+.toggle .lbl .d{font-size:12px;color:var(--muted)}
+.dongle{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.dongle .n{font-family:var(--serif);font-size:17px;color:var(--sage);margin-bottom:4px}
+.dongle .p{color:var(--muted);font-size:13px;margin-bottom:6px}
+.dongle .l{font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:0.04em}
+.dongle .l a{color:var(--amber);text-decoration:none}
+.dongle .l a:hover{text-decoration:underline}
+.foot{padding:24px;text-align:center;color:var(--dim);font-family:var(--mono);font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase}
+.foot a{color:var(--muted);text-decoration:none}
+.foot a:hover{color:var(--sage)}
+code{font-family:var(--mono);background:var(--surface);padding:2px 6px;border-radius:4px;font-size:12.5px;color:var(--amber)}
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--coral);margin-right:6px;vertical-align:middle}
+.status-dot.on{background:var(--sage);box-shadow:0 0 8px var(--sage)}
+.empty{color:var(--dim);font-style:italic;font-family:var(--serif);font-size:15px;padding:14px 0;text-align:center}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="glyph">≈</span> FallBridge <span class="co">AI-Native Solutions</span></div>
+  <nav class="tabs">
+    <button class="tab on" data-view="dash">Bridge</button>
+    <button class="tab" data-view="mesh">Mesh</button>
+    <button class="tab" data-view="term">Terminal</button>
+    <button class="tab" data-view="carrier">Carrier</button>
+    <button class="tab" data-view="hardware">Hardware</button>
+    <button class="tab" data-view="about">About</button>
+  </nav>
+</header>
+
+<main>
+
+<section class="view on" data-v="dash">
+  <div class="hero">
+    <h1>Browsers don't <em>advertise</em>. Dongles do.</h1>
+    <p class="lead">FallBridge pairs your browser to an ESP32 or nRF52 BLE-mesh dongle over Web Bluetooth GATT. Your phone is the UI. The dongle is the radio. Off-grid mesh messaging, powered by hardware you can buy for £15–30.</p>
+    <div class="warn" id="btwarn" style="display:none">Web Bluetooth not available. Use Chrome or Edge on desktop, or Chrome on Android. iOS Safari does not support Web Bluetooth.</div>
+  </div>
+
+  <div class="card">
+    <h3>Connection</h3>
+    <div class="stat"><div class="k">Status</div><div class="v"><span class="status-dot" id="dot"></span><span id="statusText">not paired</span></div></div>
+    <div class="stat"><div class="k">Device</div><div class="v" id="devName">—</div></div>
+    <div class="stat"><div class="k">Protocol</div><div class="v" id="proto">—</div></div>
+    <div class="stat"><div class="k">Battery</div><div class="v" id="batt">—</div></div>
+    <div class="stat"><div class="k">Peers seen</div><div class="v" id="peerCount">0</div></div>
+    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="big-btn" id="pairBtn">Pair device</button>
+      <button class="big-btn ghost" id="battBtn" disabled>Read battery</button>
+      <button class="big-btn coral" id="discBtn" disabled>Disconnect</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Compose</h3>
+    <div class="compose">
+      <div class="field">
+        <label>Destination</label>
+        <select id="destSel"><option value="">Broadcast (ALL)</option></select>
+      </div>
+      <div class="field">
+        <label>Message</label>
+        <textarea id="msgIn" placeholder="type a mesh message" rows="1"></textarea>
+      </div>
+      <button class="send-btn" id="sendBtn" disabled>Send</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Stream</h3>
+    <div class="stream" id="stream"><div class="empty">No messages yet. Pair a dongle to start.</div></div>
+  </div>
+</section>
+
+<section class="view" data-v="mesh">
+  <div class="hero"><h1>Mesh <em>peers</em></h1><p>All nodes the dongle has heard from recently. RSSI is dBm at last hop. Hops shows how far away in the mesh.</p></div>
+  <div class="card"><div class="peers" id="peersGrid"><div class="empty">No peers heard yet.</div></div></div>
+</section>
+
+<section class="view" data-v="term">
+  <div class="hero"><h1>Raw <em>terminal</em></h1><p>Send arbitrary hex to the RX characteristic. Read stream is decoded UTF-8 with hex fallback. For firmware developers only.</p></div>
+  <div class="card">
+    <h3>RX Log</h3>
+    <div class="term" id="termLog">// awaiting bytes…</div>
+    <div class="hex-input">
+      <input id="hexIn" placeholder="e.g. 48 65 6c 6c 6f 0a">
+      <button class="big-btn" id="hexSend" disabled>Write hex</button>
+    </div>
+  </div>
+</section>
+
+<section class="view" data-v="carrier">
+  <div class="hero"><h1>Register as <em>FallCarrier</em> transport</h1><p>When enabled, FallBridge exposes itself on <code>window.FallCarrier</code> as a routing transport. FallMail and other estate apps will use the BLE-mesh path when available.</p></div>
+  <div class="card">
+    <div class="toggle" id="carrierToggle">
+      <div class="sw"></div>
+      <div class="lbl"><div class="t">Publish transport</div><div class="d">Off — apps in this tab won't route via BLE mesh.</div></div>
+    </div>
+    <div class="stat"><div class="k">Transport name</div><div class="v">fallbridge-ble-mesh</div></div>
+    <div class="stat"><div class="k">Available</div><div class="v" id="carrierAvail">no (not paired)</div></div>
+    <div class="stat"><div class="k">Route</div><div class="v">browser → GATT → dongle radio → mesh</div></div>
+  </div>
+  <div class="card">
+    <h3>Integration snippet</h3>
+    <div class="term" style="color:var(--text)">// in your app
+import { FallBridge } from 'https://sjgant80-hub.github.io/fallbridge/fallbridge.js';
+const bridge = new FallBridge();
+await bridge.pair();
+window.FallCarrier?.register(bridge.asCarrierTransport());
+</div>
+  </div>
+</section>
+
+<section class="view" data-v="hardware">
+  <div class="hero"><h1>Buy the <em>right dongle</em></h1><p>You need hardware that can advertise on BLE and run a mesh stack. These all cost £15–30 and Meshtastic firmware is free.</p></div>
+  <div class="card">
+    <div class="dongle">
+      <div class="n">LILYGO T-Beam v1.2</div>
+      <div class="p">ESP32 + LoRa SX1276 + GPS + battery holder. The workhorse. LoRa gives you kilometres of range, not just BLE metres.</div>
+      <div class="l"><a href="https://meshtastic.org/docs/hardware/devices/lilygo/tbeam/" target="_blank" rel="noopener">meshtastic.org · T-Beam guide</a></div>
+    </div>
+    <div class="dongle">
+      <div class="n">LILYGO T-Echo</div>
+      <div class="p">nRF52 + e-paper display + LoRa. Pocketable, sunlight-readable, all-day battery. Best for handheld carry.</div>
+      <div class="l"><a href="https://meshtastic.org/docs/hardware/devices/lilygo/techo/" target="_blank" rel="noopener">meshtastic.org · T-Echo guide</a></div>
+    </div>
+    <div class="dongle">
+      <div class="n">Heltec V3 LoRa32</div>
+      <div class="p">ESP32-S3 + LoRa + OLED. The cheapest ticket in. Under £20 direct from Heltec. Good desktop base station.</div>
+      <div class="l"><a href="https://meshtastic.org/docs/hardware/devices/heltec-automation/lora32/" target="_blank" rel="noopener">meshtastic.org · Heltec V3 guide</a></div>
+    </div>
+    <div class="dongle">
+      <div class="n">RAK Wireless RAK4631</div>
+      <div class="p">nRF52840 + LoRa in the RAK WisBlock modular ecosystem. Best power efficiency for solar or long-runtime nodes.</div>
+      <div class="l"><a href="https://meshtastic.org/docs/hardware/devices/rak/wisblock/" target="_blank" rel="noopener">meshtastic.org · WisBlock guide</a></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3>Flash the firmware</h3>
+    <p style="color:var(--muted);margin-bottom:10px">Plug the dongle into USB, open the web-flasher in Chrome, pick your board, click flash. Two minutes.</p>
+    <p><a href="https://flasher.meshtastic.org/" target="_blank" rel="noopener" style="color:var(--sage);font-family:var(--mono);font-size:13px;letter-spacing:0.06em">flasher.meshtastic.org →</a></p>
+    <p style="margin-top:14px;color:var(--muted);font-size:13.5px">Or use any BLE-UART firmware that exposes the Nordic UART Service (NUS). FallBridge speaks both.</p>
+  </div>
+</section>
+
+<section class="view" data-v="about">
+  <div class="hero"><h1>About <em>FallBridge</em></h1></div>
+  <div class="card">
+    <p style="color:var(--muted);margin-bottom:10px">FallBridge is a browser-side terminal for BLE-mesh dongles. Web Bluetooth is a restricted API — a browser cannot advertise, cannot be a peripheral, and cannot itself join a mesh. But it CAN connect to a GATT peripheral that can. That's the whole trick.</p>
+    <p style="color:var(--muted);margin-bottom:10px">The dongle you buy runs Meshtastic (or bitchat, or any BLE-UART firmware). It handles advertising, scanning, radio hops, LoRa if fitted. FallBridge is the bridge between browser tab and that hardware — read peer list, send messages, subscribe to incoming.</p>
+    <p style="color:var(--muted)">Register as a FallCarrier transport and FallMail, FallReach and other estate apps route through the mesh when available. Off-grid, no ISP, no cell tower.</p>
+  </div>
+  <div class="card">
+    <h3>Estate primitives used</h3>
+    <div class="stat"><div class="k">FallID</div><div class="v"><a href="https://sjgant80-hub.github.io/fallid/" style="color:var(--sage)">sjgant80-hub.github.io/fallid</a></div></div>
+    <div class="stat"><div class="k">FallCarrier</div><div class="v"><a href="https://sjgant80-hub.github.io/fallcarrier/" style="color:var(--sage)">sjgant80-hub.github.io/fallcarrier</a></div></div>
+    <div class="stat"><div class="k">FallMail</div><div class="v"><a href="https://sjgant80-hub.github.io/fallmail/" style="color:var(--sage)">sjgant80-hub.github.io/fallmail</a></div></div>
+  </div>
+  <div class="card">
+    <h3>License</h3>
+    <p style="color:var(--muted)">MIT · fork, run, mesh. Repository at <a href="https://github.com/sjgant80-hub/fallbridge" style="color:var(--sage)">github.com/sjgant80-hub/fallbridge</a>.</p>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">≈ FallBridge · <a href="https://ai-nativesolutions.com" target="_blank" rel="noopener">AI-Native Solutions</a> · MIT</footer>
+
+<script type="module">
+import { FallBridge } from './fallbridge.js';
+
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+
+const bridge = new FallBridge({ debug: true });
+window.__fallbridge = bridge;
+
+// tabs
+$$('.tab').forEach(t => t.addEventListener('click', () => {
+  $$('.tab').forEach(x => x.classList.remove('on'));
+  $$('.view').forEach(x => x.classList.remove('on'));
+  t.classList.add('on');
+  $(`.view[data-v="${t.dataset.view}"]`).classList.add('on');
+}));
+
+// bluetooth availability check
+if (!navigator.bluetooth) {
+  $('#btwarn').style.display = 'block';
+  $('#pairBtn').disabled = true;
+}
+
+// pair
+$('#pairBtn').addEventListener('click', async () => {
+  try {
+    $('#pairBtn').disabled = true;
+    $('#statusText').textContent = 'requesting…';
+    await bridge.pair();
+  } catch(e) {
+    console.error(e);
+    $('#statusText').textContent = 'error: ' + e.message;
+    $('#pairBtn').disabled = false;
+  }
+});
+
+$('#discBtn').addEventListener('click', () => bridge.disconnect());
+
+$('#battBtn').addEventListener('click', async () => {
+  const b = await bridge.getBattery();
+  $('#batt').textContent = b === null ? 'unavailable' : (b + ' %');
+});
+
+// send text
+$('#sendBtn').addEventListener('click', async () => {
+  const text = $('#msgIn').value.trim();
+  if (!text) return;
+  const dest = $('#destSel').value;
+  try {
+    await bridge.send(text, dest || null);
+    $('#msgIn').value = '';
+  } catch(e) { alert('send failed: ' + e.message); }
+});
+$('#msgIn').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#sendBtn').click(); }
+});
+
+// hex terminal
+$('#hexSend').addEventListener('click', async () => {
+  const h = $('#hexIn').value.trim();
+  if (!h) return;
+  try {
+    const n = await bridge.sendHex(h);
+    appendTerm(`> [${n}B] ${h}`);
+    $('#hexIn').value = '';
+  } catch(e) { alert('hex send failed: ' + e.message); }
+});
+
+// carrier toggle
+$('#carrierToggle').addEventListener('click', () => {
+  const el = $('#carrierToggle');
+  el.classList.toggle('on');
+  const on = el.classList.contains('on');
+  const d = el.querySelector('.d');
+  if (on) {
+    const t = bridge.asCarrierTransport();
+    window.FallCarrier = window.FallCarrier || { transports: [], register(x) { this.transports.push(x); } };
+    window.FallCarrier.register(t);
+    d.textContent = 'On — window.FallCarrier now advertises the BLE-mesh transport.';
+  } else {
+    if (window.FallCarrier?.transports) {
+      window.FallCarrier.transports = window.FallCarrier.transports.filter(x => x.name !== 'fallbridge-ble-mesh');
+    }
+    d.textContent = 'Off — apps in this tab won\'t route via BLE mesh.';
+  }
+  updateCarrier();
+});
+
+function updateCarrier() {
+  $('#carrierAvail').textContent = bridge.connected ? 'yes' : 'no (not paired)';
+}
+
+// state updates
+bridge.onState((s) => {
+  const on = s.state === 'connected';
+  $('#dot').classList.toggle('on', on);
+  $('#statusText').textContent = s.state;
+  if (s.name) $('#devName').textContent = s.name;
+  if (s.protocol) $('#proto').innerHTML = `<span class="pill on">${s.protocol}</span>`;
+  $('#sendBtn').disabled = !on;
+  $('#hexSend').disabled = !on;
+  $('#battBtn').disabled = !on;
+  $('#discBtn').disabled = !on;
+  $('#pairBtn').disabled = on;
+  updateCarrier();
+});
+
+// message stream
+bridge.onMessage((m) => {
+  const stream = $('#stream');
+  if (stream.querySelector('.empty')) stream.innerHTML = '';
+  const el = document.createElement('div');
+  el.className = 'msg ' + m.dir;
+  const ts = new Date(m.ts).toLocaleTimeString();
+  const meta = [];
+  if (m.dir === 'out') meta.push(`→ ${m.dest}`);
+  if (m.dir === 'in') {
+    meta.push(`from ${m.from}`);
+    if (m.hops) meta.push(`${m.hops} hops`);
+    if (m.rssi) meta.push(`${m.rssi} dBm`);
+  }
+  meta.push(ts);
+  el.innerHTML = `<div class="meta">${meta.map(x => `<span>${x}</span>`).join('')}</div><div>${escapeHtml(m.text)}</div>`;
+  stream.appendChild(el);
+  stream.scrollTop = stream.scrollHeight;
+
+  // terminal
+  if (m.dir === 'in') {
+    appendTerm(`< ${m.raw ? m.raw + '  ·  ' : ''}${m.text}`);
+  }
+});
+
+// peers
+bridge.onPeer((p) => renderPeers());
+function renderPeers() {
+  const peers = bridge.getPeers();
+  $('#peerCount').textContent = peers.length;
+  const grid = $('#peersGrid');
+  if (!peers.length) { grid.innerHTML = '<div class="empty">No peers heard yet.</div>'; return; }
+  grid.innerHTML = peers.map(p => `
+    <div class="peer">
+      <div class="id">${escapeHtml(p.id)}</div>
+      <div class="name">${escapeHtml(p.name || p.id)}</div>
+      <div class="meta">${p.rssi || '—'} dBm · ${p.hops || 0} hops · ${timeAgo(p.lastSeen)}</div>
+    </div>`).join('');
+  // dest selector
+  const sel = $('#destSel');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Broadcast (ALL)</option>' + peers.map(p =>
+    `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name || p.id)}</option>`).join('');
+  sel.value = cur;
+}
+
+function appendTerm(line) {
+  const t = $('#termLog');
+  if (t.textContent.startsWith('// awaiting')) t.textContent = '';
+  t.textContent += line + '\n';
+  t.scrollTop = t.scrollHeight;
+}
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function timeAgo(ts) { const s = Math.floor((Date.now() - ts)/1000); if (s < 60) return s + 's ago'; if (s < 3600) return Math.floor(s/60) + 'm ago'; return Math.floor(s/3600) + 'h ago'; }
+
+// register SW
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
