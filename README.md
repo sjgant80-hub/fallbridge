@@ -16,7 +16,7 @@ Browsers can't advertise BLE. They can't be a peripheral. They can't join a mesh
 
 ## Which hardware to buy
 
-Any BLE + LoRa combo running Meshtastic. TBA–TBA.
+Any BLE + LoRa combo running Meshtastic. £15–£30.
 
 | Dongle | Chip | Best for | Guide |
 |---|---|---|---|
